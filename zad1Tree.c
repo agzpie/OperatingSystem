@@ -6,11 +6,26 @@
 
 void procStatus(int nazwaPID) {
 	printf("Nazwa procesu: P%d\t PID: %d\tPPID: %d\n", nazwaPID, getpid(), getppid());
-	fflush(NULL);
+	fflush(NULL); 
 }
 
-void singleChild(int nazwaPID) {
+void procWithChildrenStatus(int nazwaPID, int children[], int numOfChildren) {
+	procStatus(nazwaPID);;
+
+	printf("Potomni P%d: ", nazwaPID);
+
+	for (int i = 0; i < numOfChildren; i++) {
 	
+		printf("%d", children[i]);
+		if (i != numOfChildren - 1 ) {
+			printf(", ");
+		}
+	}
+
+	printf("\n");
+}
+
+int singleChild(int nazwaPID) {
 	pid_t pid = fork();
 	if (pid == 0) {
 		procStatus(nazwaPID);
@@ -19,32 +34,42 @@ void singleChild(int nazwaPID) {
 	else if (pid == -1) {
 		printf("Blad funkcji fork\n");
 		exit(1);
-}
+	}
 	else {
 		wait(NULL);
 	}
+
+	return pid;
 }
 
-void proces1() {
-	singleChild(2);
+int proces1() {
+	return singleChild(2);
 }
 
 void proces2() {
+	int childrenP3[2];
 	pid_t pid = fork();
 	if (pid == 0) {
-		procStatus(3);
-		singleChild(6);
+		
+		childrenP3[0] = singleChild(6);
 
 		pid_t pid2 = fork();
 		if (pid2 == 0) {
-			procStatus(7);
-			singleChild(10);
+			int childrenP7[1];
+			
+			childrenP7[0] = singleChild(10);
+
+			procWithChildrenStatus(7, childrenP7, 1);
 
 			exit(0);
 		}
 		else {
+			childrenP3[1] = (int) pid2;
 			wait(NULL);
 		}
+		
+		procWithChildrenStatus(3, childrenP3, 2);
+	
 		exit(0);
 	}
 	else {
@@ -52,8 +77,8 @@ void proces2() {
 	}
 }
 
-void proces3() {
-	singleChild(4);
+int proces3() {
+	return singleChild(4);
 }
 
 void proces4() {
