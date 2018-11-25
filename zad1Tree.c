@@ -26,23 +26,23 @@ void singleChild(int nazwaPID) {
 }
 
 void proces1() {
-	singleChild();
+	singleChild(2);
 }
 
 void proces2() {
 	pid_t pid = fork();
 	if (pid == 0) {
-		procStatus();
-		singleChild();
+		procStatus(3);
+		singleChild(6);
 
 		pid_t pid2 = fork();
 		if (pid2 == 0) {
-			procStatus();
-			singleChild();
+			procStatus(7);
+			singleChild(10);
 
 			exit(0);
 		}
-		else {+
+		else {
 			wait(NULL);
 		}
 		exit(0);
@@ -53,16 +53,16 @@ void proces2() {
 }
 
 void proces3() {
-	singleChild();
+	singleChild(4);
 }
 
 void proces4() {
 	pid_t pid = fork();
 	if (pid == 0) {
-		procStatus();
+		procStatus(5);
 		
-		for (int i = 0; i < 2; i++) {
-			singleChild();
+		for (int i = 8; i <= 9; i++) {
+			singleChild(i);
 		}
 
 		exit(0);
@@ -74,10 +74,8 @@ void proces4() {
 
 
 int main() {
-
-	int nazwaPID = 0;
 		
-	procStatus();
+	procStatus(1);
 	proces1();
 	proces2();
 	proces3();
