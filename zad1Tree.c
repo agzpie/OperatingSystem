@@ -46,7 +46,7 @@ int proces1() {
 	return singleChild(2);
 }
 
-void proces2() {
+int proces2() {
 	int childrenP3[2];
 	pid_t pid = fork();
 	if (pid == 0) {
@@ -75,36 +75,42 @@ void proces2() {
 	else {
 		wait(NULL);
 	}
+
+	return pid;
 }
 
 int proces3() {
 	return singleChild(4);
 }
 
-void proces4() {
+int proces4() {
 	pid_t pid = fork();
+
 	if (pid == 0) {
-		procStatus(5);
-		
-		for (int i = 8; i <= 9; i++) {
-			singleChild(i);
+		int childrenP5[2];
+		for (int i = 0; i <= 1; i++) {
+			childrenP5[i] = singleChild(i+8);
 		}
 
+		procWithChildrenStatus(5, childrenP5, 2);
 		exit(0);
 	}
 	else {
 		wait(NULL);
 	}
+
+	return pid;
 }
 
 
 int main() {
-		
-	procStatus(1);
-	proces1();
-	proces2();
-	proces3();
-	proces4();
+	int childrenP1[4];
+	childrenP1[0] = proces1();
+	childrenP1[1] = proces2();
+	childrenP1[2] = proces3();
+	childrenP1[3] = proces4();
+
+	procWithChildrenStatus(1, childrenP1, 4);
 
 	return 0;
 
