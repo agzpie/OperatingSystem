@@ -6,31 +6,25 @@
 #include <signal.h>
 #include <stdlib.h>
 
+pid_t pid = -1; //global
+
 void procStatus(int nazwaPID) {
 	printf("Proces nr P%d\t o PID: %d\tuśpiony\n", nazwaPID, getpid());
 	fflush(NULL); 
 }
 
-void procWithChildrenStatus(int nazwaPID, int children[], int numOfChildren) {
-	procStatus(nazwaPID);;
-
-	printf("Potomni P%d: ", nazwaPID);
-
-	for (int i = 0; i < numOfChildren; i++) {
-	
-		printf("%d", children[i]);
-		if (i != numOfChildren - 1 ) {
-			printf(", ");
-		}
-	}
-
-	printf("\n");
+void kill_child(int sig) {
+	kill(pid,SIGKILL);
 }
 
 int singleChild(int nazwaPID) {
+	signal(SIGALRM,(void (*)(int))kill_child);
 	pid_t pid = fork();
 	if (pid == 0) {
+		printf("Starting child process P%d...\n", nazwaPID);
+		sleep(10);
 		procStatus(nazwaPID);
+		printf("Process ended\n");
 		exit(0);
 	}
 	else if (pid == -1) {
@@ -38,6 +32,8 @@ int singleChild(int nazwaPID) {
 		exit(1);
 	}
 	else {
+		alarm(10);
+		printf("Parent is killing...");
 		wait(NULL);
 	}
 
@@ -48,62 +44,6 @@ int proces1() {
 	return singleChild(2);
 }
 
-int proces2() {
-	int childrenP3[2];
-	pid_t pid = fork();
-	if (pid == 0) {
-		
-		childrenP3[0] = singleChild(6);
-
-		pid_t pid2 = fork();
-		if (pid2 == 0) {
-			int childrenP7[1];
-			
-			childrenP7[0] = singleChild(10);
-
-			procWithChildrenStatus(7, childrenP7, 1);
-
-			exit(0);
-		}
-		else {
-			childrenP3[1] = (int) pid2;
-			wait(NULL);
-		}
-		
-		procWithChildrenStatus(3, childrenP3, 2);
-	
-		exit(0);
-	}
-	else {
-		wait(NULL);
-	}
-
-	return pid;
-}
-
-int proces3() {
-	return singleChild(4);
-}
-
-int proces4() {
-	pid_t pid = fork();
-
-	if (pid == 0) {
-		int childrenP5[2];
-		for (int i = 0; i <= 1; i++) {
-			childrenP5[i] = singleChild(i+8);
-		}
-
-		procWithChildrenStatus(5, childrenP5, 2);
-		exit(0);
-	}
-	else {
-		wait(NULL);
-	}
-
-	return pid;
-}
-
 void createProcesses(int n) {
 	singleChild(0);
 
@@ -111,6 +51,7 @@ void createProcesses(int n) {
 		singleChild(i);
 	}
 
+	
 
 }
 
