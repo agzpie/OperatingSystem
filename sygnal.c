@@ -1,4 +1,4 @@
-// program gdzie jest proces macierzysty i duzo potomnych
+// program gdzie jest proces macierzysty i duzo potomnych i sa wysylane sygnaly
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -6,61 +6,55 @@
 #include <signal.h>
 #include <stdlib.h>
 
-pid_t pid = -1; //global
-
-void procStatus(int nazwaPID) {
-	printf("Proces nr P%d\t o PID: %d\tuśpiony\n", nazwaPID, getpid());
+void procStatus(int processNumber) {
+	printf("Process nr P%d\t with PID: %d\tand PPID: %d\tis sleeping\n", processNumber, getpid(), getppid());
 	fflush(NULL); 
 }
 
 void kill_child(int sig) {
-	kill(pid,SIGKILL);
+	pid_t pid = -1; 
+	kill(pid,SIGTERM);
 }
 
-int singleChild(int nazwaPID) {
-	signal(SIGALRM,(void (*)(int))kill_child);
-	pid_t pid = fork();
-	if (pid == 0) {
-		printf("Starting child process P%d...\n", nazwaPID);
-		sleep(10);
-		procStatus(nazwaPID);
-		printf("Process ended\n");
-		exit(0);
-	}
-	else if (pid == -1) {
-		printf("Blad funkcji fork\n");
-		exit(1);
-	}
-	else {
-		alarm(10);
-		printf("Parent is killing...");
-		wait(NULL);
-	}
-
-	return pid;
-}
-
-int proces1() {
-	return singleChild(2);
-}
-
-void createProcesses(int n) {
-	singleChild(0);
-
-	for (int i = 1; i <= n; i++) {
-		singleChild(i);
-	}
-
-	
-
-}
+	//signal(SIGALRM,(void (*)(int))kill_child);
 
 int main() {
 	int n;
+	
+	printf("PID: %d\n", getpid());
 	printf("Podaj liczbe: ");
 	scanf("%d", &n);
-	createProcesses(n);
+	pid_t tab[n];
+	time_t t;
+	srand((unsigned) time(&t));
+	
+	for (int i = 1; i <= n; i++) {
+		pid_t pid = fork();
+		tab[i-1] = pid;
+
+		if (pid == 0) {
+			int random = rand() % 10;
+
+			printf("Starting child process P%d...\n", i);
+			procStatus(i);
+			sleep(random);
+			printf("Awakening child process P%d\twith pid:\t%d\n", i,  getpid());
+			exit(0);
+		}
+		else if (pid == -1) {
+			printf("Blad funkcji fork\n");
+			exit(1);
+		}
+	}
+	
+	pid_t pidFirst = wait(NULL); //first child to finish
+
+	for (int i = 1; i <= n; i++) {
+		if (tab[i-1] != pidFirst) {
+			printf("Exterminating child process with pid:\t%d\n", tab[i-1]);
+			kill(tab[i-1], SIGTERM);
+		}
+	}
 
 	return 0;
-
 }
